@@ -67,3 +67,21 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# IDE / editor
+.vscode/
+.idea/
+*.code-workspace
+
+# CMake presets (personal ones)
+CMakeUserPresets.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Benchmark output
+bench/results/*.csv
+
+# md
+notes.md
