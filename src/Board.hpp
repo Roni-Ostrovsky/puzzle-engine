@@ -4,10 +4,19 @@
 #include <stdexcept>
 #include <cstdint>
 #include <sstream>
-#include <cmath>    
+#include <cmath>
+#include <algorithm>
 
 enum class Symbol : uint8_t { Empty = 0, Sun = 1, Moon = 2 };
 enum class CellRelationType { Equal, UnEqual, None };
+struct NeighborConstraints {
+    CellRelationType up;
+    CellRelationType down;
+    CellRelationType left;
+    CellRelationType right;
+
+    NeighborConstraints() : up(CellRelationType::None), down(CellRelationType::None), left(CellRelationType::None), right(CellRelationType::None) {}
+};
 
 class Board {
     private:
@@ -16,9 +25,20 @@ class Board {
         std::vector<CellRelationType> verticalConstraints;
         size_t size;
 
+        void ValidateAdjacent(size_t c1, size_t c2) const {
+            if (c1 >= size*size || c2 >= size*size)
+                throw std::invalid_argument("Cell indices out of bounds. (indices received: " + std::to_string(c1) + ", " + std::to_string(c2) + ")");
+            if (c1 == c2)
+                throw std::invalid_argument("Cannot add constraint between the same cell.");
+            if (abs(c2-c1) != 1 && abs(c2-c1) != size)
+                throw std::invalid_argument("Constraints can only be added between adjacent cells. (indices received: " + std::to_string(c1) + ", " + std::to_string(c2) + ")");
+            if (std::min(c1, c2)%size == size-1 && abs(c2-c1) == 1)
+                throw std::invalid_argument("Constraints can only be added between adjacent cells. (indices received: " + std::to_string(c1) + ", " + std::to_string(c2) + ")");
+        }
+
     public:
         Board(size_t s) : size(s) {
-            if (s < 6 || s%2!=0)
+            if (s < 6 || s > 16 || s%2!=0)
                 throw std::invalid_argument("Board size must be even and >= 6. (size received: " + std::to_string(s) + ")");
             
             horizontalConstraints = std::vector<CellRelationType>(s*(s-1), CellRelationType::None);
@@ -65,22 +85,41 @@ class Board {
 
         std::vector<CellRelationType> GetVerticalConstraints() const { return verticalConstraints; }
 
+        CellRelationType GetConstraint(size_t c1, size_t c2) const {
+            ValidateAdjacent(c1, c2); //throws exception if not adjacent or out of bounds
+            if (c1 > c2)
+                std::swap(c1, c2);
+            
+            if(c2-c1 == 1) {
+                return horizontalConstraints[c1-c1/size];
+            }
+            else if(c2-c1 == size) {
+                return verticalConstraints[c1];
+            }
+            return CellRelationType::None;
+        }
+
+        NeighborConstraints GetNeighborConstraints(size_t i) const {
+            if (i >= size*size)
+                throw std::invalid_argument("Cell index out of bounds. (index received: " + std::to_string(i) + ")");
+            
+            NeighborConstraints nc;
+            nc.up = (i >= size) ? verticalConstraints[i-size] : CellRelationType::None;
+            nc.down = (i < size*(size-1)) ? verticalConstraints[i] : CellRelationType::None;
+            nc.left = (i%size > 0) ? horizontalConstraints[i-1-i/size] : CellRelationType::None;
+            nc.right = (i%size < size-1) ? horizontalConstraints[i-i/size] : CellRelationType::None;
+            return nc;
+        }
+
         /// @brief c1 and c2 are cell indices in the cells vector, t is the type of constraint to add
         /// @param c1 
         /// @param c2 
         /// @param t 
         /// @return none
         void AddConstraint(size_t c1, size_t c2, CellRelationType t) {
-            if (c1 >= size*size || c2 >= size*size)
-                throw std::invalid_argument("Cell indices out of bounds. (indices received: " + std::to_string(c1) + ", " + std::to_string(c2) + ")");
-            if (c1 == c2)
-                throw std::invalid_argument("Cannot add constraint between the same cell.");
+            ValidateAdjacent(c1, c2); //throws exception if not adjacent or out of bounds
             if (c1 > c2)
                 std::swap(c1, c2);
-            if (c2-c1 != 1 && c2-c1 != size)
-                throw std::invalid_argument("Constraints can only be added between adjacent cells. (indices received: " + std::to_string(c1) + ", " + std::to_string(c2) + ")");
-            if (c1%size == size-1 && c2-c1 == 1)
-                throw std::invalid_argument("Constraints can only be added between adjacent cells. (indices received: " + std::to_string(c1) + ", " + std::to_string(c2) + ")");
             
             if(c2-c1 == 1) {
                 if(horizontalConstraints[c1-c1/size] != CellRelationType::None)
@@ -105,27 +144,38 @@ class Board {
                 switch(cells[i]) {
                     case Symbol::Empty:
                         result << "_ ";
+                        break;
                     case Symbol::Sun:
                         result << "☀ ";
+                        break;
                     case Symbol::Moon:
                         result << "☾ ";
+                        break;
                 }
-                switch(horizontalConstraints[i-i/size]) {
-                    case CellRelationType::Equal:
-                        result << "= ";
-                    case CellRelationType::UnEqual:
-                        result << "x ";
-                    case CellRelationType::None:
-                        result << "  ";
+                if (i%size < size-1) {
+                    switch(horizontalConstraints[i-i/size]) {
+                        case CellRelationType::Equal:
+                            result << "= ";
+                            break;
+                        case CellRelationType::UnEqual:
+                            result << "x ";
+                            break;
+                        case CellRelationType::None:
+                            result << "  ";
+                            break;
+                    }
                 }
                 if (i/size < size-1) {
                     switch(verticalConstraints[i]) {
                         case CellRelationType::Equal:
                             verticalConstraintsRow << "=   ";
+                            break;
                         case CellRelationType::UnEqual:
                             verticalConstraintsRow << "x   ";
+                            break;
                         case CellRelationType::None:
                             verticalConstraintsRow << "    ";
+                            break;
                     }
                 }
                 if (i%size == size-1) {

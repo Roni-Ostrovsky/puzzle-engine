@@ -10,13 +10,26 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-add_executable(puzzle src/main.cpp src/Board.hpp)
-target_include_directories(puzzle PRIVATE src)
+add_library(project_settings INTERFACE)
+target_include_directories(project_settings INTERFACE src)
 
 if(MSVC)
-    target_compile_options(puzzle PRIVATE /W4)
+    target_compile_options(project_settings INTERFACE /W4)
 else()
-    target_compile_options(puzzle PRIVATE -Wall -Wextra -Wpedantic)
-    target_compile_options(puzzle PRIVATE $<$<CONFIG:Debug>:-fsanitize=address,undefined>)
-    target_link_options(puzzle PRIVATE $<$<CONFIG:Debug>:-fsanitize=address,undefined>)
+    target_compile_options(project_settings INTERFACE -Wall -Wextra -Wpedantic)
+    target_compile_options(project_settings INTERFACE $<$<CONFIG:Debug>:-fsanitize=address,undefined>)
+    target_link_options(project_settings INTERFACE $<$<CONFIG:Debug>:-fsanitize=address,undefined>)
 endif()
+
+
+add_executable(puzzle src/main.cpp src/Board.hpp)
+target_link_libraries(puzzle PRIVATE project_settings)
+
+
+enable_testing()
+
+add_executable(tests tests/test_board.cpp)
+target_link_libraries(tests PRIVATE project_settings)
+target_include_directories(tests PRIVATE tests)
+
+add_test(NAME board_tests COMMAND tests)
