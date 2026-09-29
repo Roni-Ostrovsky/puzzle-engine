@@ -117,3 +117,45 @@ actually feel to solve by hand.
 **Date:** 2026-09-23
 
 ---
+
+### D6 - Test framework
+
+**Decided:** doctest as the framework
+
+**Alternatives considered:** Catch2 and GoogleTest
+
+**Why:** It's a single header committed to the repo, so there's nothing to install, fetch or link.
+  Catch2 v3 is no longer single-header, it's a compiled library.
+
+**Would revisit if:** need mocking or if I use tools that expect GoogleTest output.
+
+**Date:** 29.9.26
+
+---
+
+### D7 - Tango grid restricted between 6 and 16
+
+**Alternatives considered:** not capping the size of the grid.
+
+**why:** Tango relise on a small grid to be human friendly, i estimate that 16x16 will be much bigger than needed for general human use.
+
+**Would revisit if:** my estimation prooves incorrect, or remove temporarily for stress-testing the engine.
+
+**Date:** 29.9.26
+
+---
+
+### D8 - Constraints lookup by cell index
+
+**Alternatives considered:** lookup by memory indices
+
+**Why:** lookup by memory indices will require conversion from cell index to the constraint index (c-c/size).
+  this way lookup is simpler and more consistent from outside the class and does no require outside acknowledgment of internal memory management.
+
+**additional impact:** GetNeighborConstraints(i) will now return a "None" restraint type if theres no neighbor.
+
+**Would revisit if:** some rules will need to tell "no neighbor" apart from no constraint.
+
+**Date:** 29.9.26
+
+---
