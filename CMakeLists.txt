@@ -22,13 +22,13 @@ else()
 endif()
 
 
-add_executable(puzzle src/main.cpp src/Board.hpp)
+add_executable(puzzle src/main.cpp src/Board.hpp src/rules_checking.cpp)
 target_link_libraries(puzzle PRIVATE project_settings)
 
 
 enable_testing()
 
-add_executable(tests tests/test_main.cpp tests/test_board.cpp)
+add_executable(tests tests/test_main.cpp tests/test_board.cpp src/rules_checking.cpp)
 target_link_libraries(tests PRIVATE project_settings)
 target_include_directories(tests PRIVATE tests)
 

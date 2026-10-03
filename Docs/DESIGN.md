@@ -20,12 +20,8 @@ Things not yet settled. Listed here so they are not mistaken for decisions.
   The difficulty model assumes it does.
   It is possible that once enough clues exist to force uniqueness, nearly
   every board is depth 0 or depth 1 and the scale collapses.
-- **Cells are addressed by 2D coordinates over continuous backing storage?**
-  Coordinates are clearer for the operations performed.
-  Neighbourhoods in Minesweeper and Mosaic are ±1 on each index, row and column iteration varies one index.
-  There is no access-speed difference between flat and 2D addressing.
-  Nested vectors, by contrast, do cost an allocation per row and a pointer chase per access,
-  which could matter because the solver copies and rolls back board states constantly.
+- **What a violation reports to the caller?**
+  currently its: rule + line/anchor cell, expected to change as solver needs become clearer.
 
   
 
@@ -157,5 +153,72 @@ actually feel to solve by hand.
 **Would revisit if:** some rules will need to tell "no neighbor" apart from no constraint.
 
 **Date:** 29.9.26
+
+---
+
+### D9 - Checkers recive board as cost Board&
+
+**Alterntives:** raw pointer or passing by value
+
+**Why:** no copy, compiler enforces read-only
+
+**Date:** 30.9.26
+
+---
+
+### D10 - Cells use flat indices
+
+**Alternatives:** 2D coordinates accessing
+
+**Why:** the index arithmatic is symple enough to handle directly.
+
+**Date:** 30.9.26
+
+---
+
+### D11 - Tango checkers work per row/column
+
+**Alternatives:** passing line of cells to check
+
+**Why:** every Tango rule is on the same row/column
+  passing the cells will push the knoledge of the rules to the callers.
+
+**Date:** 30.9.26
+
+---
+
+### D12 - Checkers report the first violation
+
+* checks will run in a fixed order (constraints, triplet, balance)
+
+**Alternatives:** collecting every violation
+
+**Why:** saves work, the solver only needs to know that there's a violation
+
+**would revisit:** if hints/explanations need all violations.
+
+**Date:** 30.9.26
+
+---
+
+### D13 - rule enum class a value per constraint type
+
+**Alternatives:** single constraint value covering '=' and 'x'
+
+**Why:** callers can tell exactly which rule failed
+
+**Date:** 30.9.26
+
+---
+
+### D14 - rule checks on partial boards, empty = unknown
+
+* A board passes when no filled cells create a violation
+* A board is solved when it passes with no empty cells
+
+**why:** passes the propegation fail-point to the engine and not an instent check.
+  creates a more uniform checking for different parts and assists in **D3**.
+
+**Date:** 30.9.26
 
 ---
