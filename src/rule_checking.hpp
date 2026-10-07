@@ -12,7 +12,8 @@ struct Violation {
     Orientation orientation;
     size_t index;
     std::optional<size_t> anchorCell; //empty for balance
-    //std::string message;
+
+    bool operator==(const Violation& other) const = default;
 };
 
 [[nodiscard]] std::optional<Violation> CheckLine(const Board& b, Orientation o, size_t index);
